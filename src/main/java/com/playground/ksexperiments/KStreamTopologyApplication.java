@@ -1,5 +1,6 @@
 package com.playground.ksexperiments;
 
+import com.playground.ksexperiments.utils.TopicsManager;
 import org.apache.kafka.clients.admin.NewTopic;
 
 import java.io.InputStream;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.playground.ksexperiments.TopicsManager.*;
+import static com.playground.ksexperiments.utils.TopicsManager.*;
 
 public class KStreamTopologyApplication {
 
@@ -52,12 +53,16 @@ public class KStreamTopologyApplication {
 
     private Collection<String> createTopics(Properties props) {
         TopicsManager topicsManager = new TopicsManager(props);
-        String inputTopic = props.getProperty(FILTER_INPUT_TOPIC);
+        String inputTopic = props.getProperty(INITIAL_INPUT_TOPIC);
         String filteredTopic = props.getProperty(FILTER_OUTPUT_TOPIC);
+        String branch1Topic = props.getProperty(BRANCH1_OUTPUT_TOPIC);
+        String branch2Topic = props.getProperty(BRANCH2_OUTPUT_TOPIC);
 
         List<NewTopic> newTopics = new ArrayList<>();
         newTopics.add(new NewTopic(inputTopic, 1, (short) 3));
         newTopics.add(new NewTopic(filteredTopic, 1, (short) 3));
+        newTopics.add(new NewTopic(branch1Topic, 1, (short) 3));
+        newTopics.add(new NewTopic(branch2Topic, 1, (short) 3));
 
         return topicsManager.createTopics(newTopics)
                 .getOrElseThrow(e -> new IllegalStateException("An error occurred while creating topics: ", e));

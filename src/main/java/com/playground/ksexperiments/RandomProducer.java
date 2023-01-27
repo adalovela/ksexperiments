@@ -1,6 +1,7 @@
 package com.playground.ksexperiments;
 
 import com.github.javafaker.Faker;
+import com.playground.ksexperiments.utils.TopicsManager;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -15,7 +16,6 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
 
 @RequiredArgsConstructor
 public class RandomProducer {
@@ -23,6 +23,14 @@ public class RandomProducer {
     private static final Logger logger = LoggerFactory.getLogger(RandomProducer.class);
 
     private static String inputTopic;
+
+    private static final int KEY_RANDOM_FACTOR = 3;
+
+    public static final String FILTER_KEY_PREFIX = "TO_FILTER_";
+    public static final String BRANCH_1_PREFIX = "BRANCH_1: ";
+    public static final String BRANCH_2_PREFIX = "BRANCH_2: ";
+
+    private static long messagesCounter;
 
     public static void main(String[] args) throws IOException {
         Properties props = new Properties();
@@ -42,17 +50,37 @@ public class RandomProducer {
         Faker faker = new Faker();
         try {
             while (true) {
+                String  key = prefixKey(faker.dune().character());
+                String  value =  decorateValue(faker.dune().quote());
                 producer.send(new ProducerRecord<>(
                         topic,
-                        faker.dune().character(),
-                        faker.dune().quote())).get();
+                        key,
+                       value)
+                );
+                logger.info(String.format("Sent -> Key:  %s - Value: %s", key, value));
                 Thread.sleep(2000);
             }
-        } catch (ExecutionException e) {
-            logger.error(e.getMessage(), e);
-        } catch (InterruptedException e) {
+        }  catch (InterruptedException e) {
             logger.error(e.getMessage(), e);
         }
 
+    }
+
+    private static String decorateValue(String value) {
+        messagesCounter++;
+        if (messagesCounter % KEY_RANDOM_FACTOR == 0) {
+            return BRANCH_1_PREFIX + value;
+        } else {
+            return BRANCH_2_PREFIX + value;
+        }
+    }
+
+    private static String prefixKey(String key) {
+        messagesCounter++;
+        if (messagesCounter % KEY_RANDOM_FACTOR == 0) {
+            return FILTER_KEY_PREFIX + key;
+        } else {
+            return key;
+        }
     }
 }

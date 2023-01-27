@@ -1,4 +1,4 @@
-package com.playground.ksexperiments;
+package com.playground.ksexperiments.utils;
 
 import java.io.FileInputStream;
 import java.io.IOException;

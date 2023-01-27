@@ -1,10 +1,9 @@
 package com.playground.ksexperiments.topologies;
 
-import com.playground.ksexperiments.FilterByKeyTopology;
-import com.playground.ksexperiments.Utils;
-import org.apache.kafka.common.serialization.Deserializer;
-import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.common.serialization.Serializer;
+import com.playground.ksexperiments.utils.Utils;
+
+import static com.playground.ksexperiments.RandomProducer.FILTER_KEY_PREFIX;
+import static com.playground.ksexperiments.topologies.TopologyTestBase.*;
 import org.apache.kafka.streams.*;
 import org.junit.Test;
 
@@ -17,15 +16,7 @@ import static org.junit.Assert.assertEquals;
 
 public class FilterByKeyTopologyTest {
 
-    private final static String TEST_CONFIG_FILE = "test.properties";
-
     private TopologyTestDriver testDriver;
-
-    private final Serializer keySerializer = Serdes.String().serializer();
-    private final Serializer valueSerializer = Serdes.String().serializer();
-
-    private final Deserializer keyDeserializer = Serdes.String().deserializer();
-    private final Deserializer valueDeserializer = Serdes.String().deserializer();
 
     @Test
     public void testFilterStream() throws IOException {
@@ -35,7 +26,7 @@ public class FilterByKeyTopologyTest {
         String inputTopic = props.getProperty("input.topic.name");
         String outputTopic = props.getProperty("filtered.topic.name");
 
-        Topology topologyUUT = FilterByKeyTopology.createTopology(inputTopic, outputTopic);
+        Topology topologyUUT = FilterByKeyTopology.create(inputTopic, outputTopic);
         testDriver = new TopologyTestDriver(topologyUUT, props);
 
         String key1 = "aaa";
@@ -44,7 +35,7 @@ public class FilterByKeyTopologyTest {
         String key2 = "bbb";
         String value2 = "Message 2";
 
-        String key3 = "mmm";
+        String key3 = FILTER_KEY_PREFIX + "ccc";
         String value3 = "Message 3";
 
         final TestInputTopic<String, String> filterTestInputTopic =

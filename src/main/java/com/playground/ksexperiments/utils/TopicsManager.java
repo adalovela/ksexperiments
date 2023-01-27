@@ -1,4 +1,4 @@
-package com.playground.ksexperiments;
+package com.playground.ksexperiments.utils;
 
 import io.vavr.control.Try;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ public class TopicsManager {
 
     private final Logger logger = LoggerFactory.getLogger(TopicsManager.class);
 
-    public static final String FILTER_INPUT_TOPIC = "input.topic.name";
+    public static final String INITIAL_INPUT_TOPIC = "input.topic.name";
     public static final String FILTER_OUTPUT_TOPIC = "filtered.topic.name";
     public static final String BRANCH1_OUTPUT_TOPIC = "branch1.topic.name";
     public static final String BRANCH2_OUTPUT_TOPIC = "branch2.topic.name";
@@ -40,7 +40,18 @@ public class TopicsManager {
     private Collection<NewTopic> createNewTopics(AdminClient client, Collection<NewTopic> topics) {
         logger.info("Creating topics...");
 
-        client.createTopics(topics)
+        Collection<NewTopic> nonExistingTopics = topics
+                .stream()
+                .filter(topic -> {
+                    try {
+                        return !checkTopicExists(client, topic.name());
+                    } catch (ExecutionException | InterruptedException e ) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .collect(Collectors.toList());
+
+        client.createTopics(nonExistingTopics)
                 .values()
                 .forEach( (topic, future) -> {
                     try {
@@ -69,6 +80,10 @@ public class TopicsManager {
                 .stream()
                 .map(topicDescription -> String.format("Topic Description: %s", topicDescription))
                 .collect(Collectors.toList());
+    }
+
+    private boolean checkTopicExists(AdminClient client, String topicName) throws ExecutionException, InterruptedException {
+        return client.listTopics().names().get().stream().anyMatch(name -> name.equalsIgnoreCase(topicName));
     }
 
 }
